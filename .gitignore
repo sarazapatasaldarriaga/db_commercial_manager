@@ -1,6 +1,4 @@
-# Terraform
-**/.terraform/*
+### Terraform ###
+**/.terraform*
 **/terraform.tfvars
-*.tfstate
-*.tfstate.*
-
+**/terraform.tfstate*
