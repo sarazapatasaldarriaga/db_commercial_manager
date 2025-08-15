@@ -1,6 +1,6 @@
-# .gitignore for sara-db
-
 # Terraform
-.terraform
+**/.terraform/*
 **/terraform.tfvars
-**/terraform.tfstate.*
+*.tfstate
+*.tfstate.*
+

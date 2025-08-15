@@ -1,10 +1,5 @@
 # outputs.tf for RDS module
 
-output "rds_endpoint" {
-  description = "The connection endpoint for the RDS instance"
-  value       = aws_db_instance.commercial_manager_mysql_db.endpoint
-}
-
 output "rds_port" {
   description = "The port for the RDS instance"
   value       = aws_db_instance.commercial_manager_mysql_db.port
