@@ -1,15 +1,5 @@
 # variables.tf for RDS module
 
-variable "vpc_id" {
-  description = "The ID of the VPC"
-  type        = string
-}
-
-variable "vpc_cidr" {
-  description = "The CIDR block of the VPC"
-  type        = string
-}
-
 variable "private_subnet_ids" {
   description = "The IDs of the private subnets"
   type        = list(string)

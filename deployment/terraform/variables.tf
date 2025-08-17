@@ -1,51 +1,21 @@
-# variables.tf (root)
-
+# AWS general options
 variable "aws_region" {
   description = "AWS region for deployment"
   type        = string
   default     = "us-east-2"
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "public_subnet_cidr_a" {
-  description = "CIDR block for the first public subnet"
-  type        = string
-  default     = "10.0.1.0/24"
-}
-
-variable "public_subnet_cidr_b" {
-  description = "CIDR block for the second public subnet"
-  type        = string
-  default     = "10.0.3.0/24"
-}
-
-variable "private_subnet_cidr_a" {
-  description = "CIDR block for the first private subnet"
-  type        = string
-  default     = "10.0.2.0/24"
-}
-
-variable "private_subnet_cidr_b" {
-  description = "CIDR block for the second private subnet"
-  type        = string
-  default     = "10.0.4.0/24"
-}
-
+# RDS options
 variable "db_instance_identifier" {
   description = "Unique identifier for the RDS DB instance"
   type        = string
-  default     = "commercial-manager-mysql-db"
+  default     = "commercial-manager-db"
 }
 
 variable "db_name" {
   description = "Name of the database"
   type        = string
-  default     = "commercialmanagerdb"
+  default     = "commercial_manager"
 }
 
 variable "db_username" {
@@ -73,15 +43,16 @@ variable "db_instance_class" {
 }
 
 variable "db_engine_version" {
-  description = "DB engine version"
+  description = "MySQL engine version"
   type        = string
   default     = "8.0"
 }
 
+# EC2 initiation instance 
 variable "ec2_ami_id" {
-  description = "AMI ID for the EC2 instance (e.g., Amazon Linux 2)"
+  description = "AMI ID for the EC2 instance"
   type        = string
-  default     = "ami-0169aa51f6faf20d5" # Latest Amazon Linux 2 AMI for us-east-1
+  default     = "ami-0169aa51f6faf20d5" # Latest Amazon Linux 2 AMI for us-east-2
 }
 
 variable "ec2_instance_type" {

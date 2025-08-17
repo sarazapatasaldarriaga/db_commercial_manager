@@ -4,22 +4,22 @@ provider "aws" {
   region = var.aws_region
 }
 
-module "vpc" {
-  source = "./modules/vpc"
+data "aws_vpc" "default" {
+  default = true
+}
 
-  aws_region            = var.aws_region
-  vpc_cidr              = var.vpc_cidr
-  public_subnet_cidr_a  = var.public_subnet_cidr_a
-  public_subnet_cidr_b  = var.public_subnet_cidr_b
-  private_subnet_cidr_a = var.private_subnet_cidr_a
-  private_subnet_cidr_b = var.private_subnet_cidr_b
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
 }
 
 # EC2 Security Group for SSH and MySQL client
 resource "aws_security_group" "commercial_manager_ec2_sg" {
   name        = "commercial-manager-ec2-sg"
   description = "Allow SSH and outbound MySQL access"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = data.aws_vpc.default.id
 
 
 
@@ -42,7 +42,7 @@ resource "aws_security_group" "commercial_manager_ec2_sg" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [module.vpc.vpc_cidr] # Allow outbound HTTPS to SSM VPC Endpoints
+    cidr_blocks = [data.aws_vpc.default.cidr_block] # Allow outbound HTTPS to SSM VPC Endpoints
   }
 
   egress {
@@ -71,9 +71,7 @@ resource "aws_security_group_rule" "allow_rds_from_ec2" {
 module "rds" {
   source = "./modules/rds"
 
-  vpc_id                 = module.vpc.vpc_id
-  vpc_cidr               = var.vpc_cidr
-  private_subnet_ids     = module.vpc.private_subnet_ids
+  private_subnet_ids     = data.aws_subnets.default.ids
   ec2_security_group_id  = aws_security_group.commercial_manager_ec2_sg.id
   db_instance_identifier = var.db_instance_identifier
   db_name                = var.db_name
@@ -148,7 +146,7 @@ resource "aws_iam_instance_profile" "ec2_s3_ssm_access_profile" {
 resource "aws_instance" "commercial_manager_db_init_ec2" {
   ami                         = var.ec2_ami_id
   instance_type               = var.ec2_instance_type
-  subnet_id                   = module.vpc.public_subnet_ids[0] # Deploy in a public subnet for internet access
+  subnet_id                   = data.aws_subnets.default.ids[0] # Deploy in a public subnet for internet access
   vpc_security_group_ids      = [aws_security_group.commercial_manager_ec2_sg.id]
   associate_public_ip_address = true # Public IP needed for internet access to install packages
   iam_instance_profile        = aws_iam_instance_profile.ec2_s3_ssm_access_profile.name
@@ -167,10 +165,10 @@ resource "aws_instance" "commercial_manager_db_init_ec2" {
 
 # VPC Endpoints for SSM
 resource "aws_vpc_endpoint" "ssm_vpce" {
-  vpc_id              = module.vpc.vpc_id
+  vpc_id              = data.aws_vpc.default.id
   service_name        = "com.amazonaws.${var.aws_region}.ssm"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = module.vpc.private_subnet_ids
+  subnet_ids          = data.aws_subnets.default.ids
   private_dns_enabled = true
   security_group_ids  = [aws_security_group.commercial_manager_ec2_sg.id]
 
@@ -180,10 +178,10 @@ resource "aws_vpc_endpoint" "ssm_vpce" {
 }
 
 resource "aws_vpc_endpoint" "ssmmessages_vpce" {
-  vpc_id              = module.vpc.vpc_id
+  vpc_id              = data.aws_vpc.default.id
   service_name        = "com.amazonaws.${var.aws_region}.ssmmessages"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = module.vpc.private_subnet_ids
+  subnet_ids          = data.aws_subnets.default.ids
   private_dns_enabled = true
   security_group_ids  = [aws_security_group.commercial_manager_ec2_sg.id]
 
@@ -193,10 +191,10 @@ resource "aws_vpc_endpoint" "ssmmessages_vpce" {
 }
 
 resource "aws_vpc_endpoint" "ec2messages_vpce" {
-  vpc_id              = module.vpc.vpc_id
+  vpc_id              = data.aws_vpc.default.id
   service_name        = "com.amazonaws.${var.aws_region}.ec2messages"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = module.vpc.private_subnet_ids
+  subnet_ids          = data.aws_subnets.default.ids
   private_dns_enabled = true
   security_group_ids  = [aws_security_group.commercial_manager_ec2_sg.id]
 

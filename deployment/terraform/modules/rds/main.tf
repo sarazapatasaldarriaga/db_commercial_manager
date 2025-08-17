@@ -1,9 +1,13 @@
 # main.tf for RDS module
 
+data "aws_vpc" "default" {
+  default = true
+}
+
 resource "aws_security_group" "commercial_manager_rds_sg" {
   name        = "commercial-manager-rds-sg"
   description = "Allow MySQL access from within the VPC and from the EC2 initialization instance"
-  vpc_id      = var.vpc_id
+  vpc_id      = data.aws_vpc.default.id
 
   # ingress {
   #   from_port   = 3306
@@ -16,7 +20,7 @@ resource "aws_security_group" "commercial_manager_rds_sg" {
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr] # Allow access from anywhere within the VPC
+    cidr_blocks = [data.aws_vpc.default.cidr_block] # Allow access from anywhere within the VPC
   }
 
   egress {
