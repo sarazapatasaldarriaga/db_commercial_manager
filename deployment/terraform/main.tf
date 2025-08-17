@@ -38,6 +38,14 @@ resource "aws_security_group" "commercial_manager_ec2_sg" {
     cidr_blocks = [data.aws_vpc.default.cidr_block] # Allow outbound HTTPS to SSM VPC Endpoints
   }
 
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow outbound access"
+  }
+
   tags = {
     Name = "commercial-manager-ec2-sg"
   }
