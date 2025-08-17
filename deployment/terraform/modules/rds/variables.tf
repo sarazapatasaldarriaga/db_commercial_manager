@@ -1,5 +1,3 @@
-# variables.tf for RDS module
-
 variable "private_subnet_ids" {
   description = "The IDs of the private subnets"
   type        = list(string)

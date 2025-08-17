@@ -1,4 +1,6 @@
-# main.tf (root)
+terraform {
+  required_version = ">= 1.12"
+}
 
 provider "aws" {
   region = var.aws_region
@@ -21,15 +23,6 @@ resource "aws_security_group" "commercial_manager_ec2_sg" {
   description = "Allow SSH and outbound MySQL access"
   vpc_id      = data.aws_vpc.default.id
 
-
-
-  # egress {
-  #   from_port   = 3306
-  #   to_port     = 3306
-  #   protocol    = "tcp"
-  #   security_groups = [module.rds.rds_security_group_id] # Allow outbound MySQL access to RDS
-  # }
-
   ingress {
     from_port   = 443
     to_port     = 443
@@ -43,14 +36,6 @@ resource "aws_security_group" "commercial_manager_ec2_sg" {
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = [data.aws_vpc.default.cidr_block] # Allow outbound HTTPS to SSM VPC Endpoints
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic for other purposes (e.g., S3 access)"
   }
 
   tags = {
@@ -146,15 +131,10 @@ resource "aws_iam_instance_profile" "ec2_s3_ssm_access_profile" {
 resource "aws_instance" "commercial_manager_db_init_ec2" {
   ami                         = var.ec2_ami_id
   instance_type               = var.ec2_instance_type
-  subnet_id                   = data.aws_subnets.default.ids[0] # Deploy in a public subnet for internet access
+  subnet_id                   = data.aws_subnets.default.ids[0]
   vpc_security_group_ids      = [aws_security_group.commercial_manager_ec2_sg.id]
-  associate_public_ip_address = true # Public IP needed for internet access to install packages
+  associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.ec2_s3_ssm_access_profile.name
-
-  user_data = <<EOT
-    #!/bin/bash
-    # All setup is now handled via SSM in the null_resource below
-  EOT
 
   tags = {
     Name = "commercial-manager-db-init-ec2"
@@ -244,7 +224,6 @@ resource "null_resource" "run_sql_scripts_on_ec2" {
       echo "SSM Command ID for SQL scripts: $COMMAND_ID"
       aws ssm wait command-executed --command-id $COMMAND_ID --instance-id ${aws_instance.commercial_manager_db_init_ec2.id}
       echo "Database commands completed. Checking status..."
-      # The output of this will be suppressed, but we run it anyway to check for errors.
       aws ssm get-command-invocation --command-id $COMMAND_ID --instance-id ${aws_instance.commercial_manager_db_init_ec2.id} --query "StatusDetails" --output text
     EOT
     interpreter = ["bash", "-c"]
